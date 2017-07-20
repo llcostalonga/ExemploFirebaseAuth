@@ -26,7 +26,11 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.ArrayList;
@@ -61,8 +65,10 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private EditText mPasswordView;
     private View mProgressView;
     private View mLoginFormView;
+   // private ProgressDialog progressDialog;
 
-    private FirebaseAuth firebaseAuth;
+
+     FirebaseAuth firebaseAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,7 +104,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         mProgressView = findViewById(R.id.login_progress);
 
         //initializing firebase auth object
-        firebaseAuth = FirebaseAuth.getInstance();
+        //firebaseAuth = FirebaseAuth.getInstance();
+
+       // progressDialog = new ProgressDialog(this);
 
     }
 
@@ -195,6 +203,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             showProgress(true);
             mAuthTask = new UserLoginTask(email, password);
             mAuthTask.execute((Void) null);
+
+
         }
     }
 
@@ -298,6 +308,13 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         int IS_PRIMARY = 1;
     }
 
+    //===== Adionado por LLC
+
+
+
+    //===
+
+
     /**
      * Represents an asynchronous login/registration task used to authenticate
      * the user.
@@ -307,18 +324,23 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         private final String mEmail;
         private final String mPassword;
 
+
+
         UserLoginTask(String email, String password) {
             mEmail = email;
             mPassword = password;
+
+            firebaseAuth = FirebaseAuth.getInstance();
         }
 
         @Override
         protected Boolean doInBackground(Void... params) {
             // TODO: attempt authentication against a network service.
 
-            try {
+          /*  try {
                 // Simulate network access.
                 Thread.sleep(2000);
+
             } catch (InterruptedException e) {
                 return false;
             }
@@ -329,9 +351,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     // Account exists, return true if the password matches.
                     return pieces[1].equals(mPassword);
                 }
-            }
+            }*/
 
-            // TODO: register the new account here.
+            registerUser();
             return true;
         }
 
@@ -341,7 +363,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             showProgress(false);
 
             if (success) {
-                finish();
+                //finish();
             } else {
                 mPasswordView.setError(getString(R.string.error_incorrect_password));
                 mPasswordView.requestFocus();
@@ -352,6 +374,46 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         protected void onCancelled() {
             mAuthTask = null;
             showProgress(false);
+        }
+        private void registerUser(){
+
+            String email = mEmailView.getText().toString().trim();
+            String password  = mPasswordView.getText().toString().trim();
+
+            //checking if email and passwords are empty
+            if(TextUtils.isEmpty(email)){
+                Toast.makeText(LoginActivity.this,"Please enter email",Toast.LENGTH_LONG).show();
+                return;
+            }
+
+            if(TextUtils.isEmpty(password)){
+                Toast.makeText(LoginActivity.this,"Please enter password",Toast.LENGTH_LONG).show();
+                return;
+            }
+
+            //if the email and password are not empty
+            //displaying a progress dialog
+
+            //progressDialog.setMessage("Registering Please Wait...");
+            //progressDialog.show();
+
+            //creating a new user
+            firebaseAuth.createUserWithEmailAndPassword(email, password)
+                    .addOnCompleteListener(LoginActivity.this, new OnCompleteListener<AuthResult>() {
+                        @Override
+                        public void onComplete(@NonNull Task<AuthResult> task) {
+                            //checking if success
+                            if(task.isSuccessful()){
+                                //display some message here
+                                Toast.makeText(LoginActivity.this,"Successfully registered",Toast.LENGTH_LONG).show();
+                            }else{
+                                //display some message here
+                                Toast.makeText(LoginActivity.this,"Registration Error",Toast.LENGTH_LONG).show();
+                            }
+
+                        }
+                    });
+
         }
     }
 }
